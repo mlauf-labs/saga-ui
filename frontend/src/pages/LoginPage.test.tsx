@@ -4,6 +4,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import LoginPage from './LoginPage'
 import { ApiClientError } from '../api/client'
 
@@ -24,13 +25,18 @@ vi.mock('react-router-dom', async (importOriginal) => {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function renderLogin() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
   return render(
-    <MantineProvider>
-      <Notifications />
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>
-    </MantineProvider>,
+    <QueryClientProvider client={queryClient}>
+      <MantineProvider>
+        <Notifications />
+        <MemoryRouter>
+          <LoginPage />
+        </MemoryRouter>
+      </MantineProvider>
+    </QueryClientProvider>,
   )
 }
 
