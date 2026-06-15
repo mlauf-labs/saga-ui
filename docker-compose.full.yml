@@ -1,0 +1,272 @@
+# Full-stack compose: Saga (all services) + Saga UI
+#
+# Usage:
+#   cp .env.full.example .env.full
+#   # Edit .env.full – fill in all required secrets
+#   docker compose -f docker-compose.full.yml --env-file .env.full up -d
+#
+# After first start, pull Ollama models (once):
+#   docker compose -f docker-compose.full.yml exec ollama ollama pull llama3.1:8b
+#   docker compose -f docker-compose.full.yml exec ollama ollama pull nomic-embed-text
+#
+# UI is available at:  http://localhost:8088
+# Saga API at:     http://localhost:8000  (internal: http://api:8000)
+
+name: saga-full
+
+# ── Shared app environment (Saga services) ────────────────────────────────
+x-app-env: &app-env
+  SAGA_STORE_NAME: ${SAGA_STORE_NAME:-saga}
+  SAGA_STORE_DESCRIPTION: ${SAGA_STORE_DESCRIPTION:-}
+  SAGA_ENV: ${SAGA_ENV:-development}
+  SAGA_API_TOKENS: ${SAGA_API_TOKENS}
+  API_CORS_ALLOW_ORIGINS: ${API_CORS_ALLOW_ORIGINS:-*}
+  API_CORS_ALLOW_CREDENTIALS: ${API_CORS_ALLOW_CREDENTIALS:-true}
+  OPENSEARCH_HOSTS: http://opensearch:9200
+  OPENSEARCH_USERNAME: ${OPENSEARCH_USERNAME:-admin}
+  OPENSEARCH_PASSWORD: ${OPENSEARCH_PASSWORD}
+  POSTGRES_DSN: postgresql+asyncpg://${POSTGRES_USER:-saga}:${POSTGRES_PASSWORD:-saga}@postgres:5432/${POSTGRES_DB:-saga}
+  MINIO_ENDPOINT: minio:9000
+  MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+  REDIS_URL: redis://redis:6379/0
+  DOCLING_URL: http://docling:5001
+  KREUZBERG_URL: http://kreuzberg:8000
+  LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
+  EMBEDDINGS_PROVIDER: ${EMBEDDINGS_PROVIDER:-ollama}
+  OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+  OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-llama3.1:8b}
+  OLLAMA_EMBED_MODEL: ${OLLAMA_EMBED_MODEL:-nomic-embed-text}
+  LLM_FALLBACK_MODEL: ${LLM_FALLBACK_MODEL:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  OPENAI_LLM_MODEL: ${OPENAI_LLM_MODEL:-gpt-4o-mini}
+  OPENAI_EMBED_MODEL: ${OPENAI_EMBED_MODEL:-text-embedding-3-small}
+  OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+  AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-}
+  AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
+  AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION:-2024-10-21}
+  AZURE_OPENAI_LLM_DEPLOYMENT: ${AZURE_OPENAI_LLM_DEPLOYMENT:-}
+  AZURE_OPENAI_EMBED_DEPLOYMENT: ${AZURE_OPENAI_EMBED_DEPLOYMENT:-}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  LOG_RENDERER: ${LOG_RENDERER:-console}
+
+# ── Shared build definition for Saga application images ───────────────────
+x-saga-build: &saga-build
+  context: ../saga-core
+  dockerfile: docker/Dockerfile
+
+# Prompt instruction files are mounted read-only from ../saga-core/config/prompts/
+# so operators can customise LLM behaviour without rebuilding. Edit the files there
+# and restart the affected service to apply changes.
+x-prompts-mount: &prompts-mount
+  - ../saga-core/config/prompts:/app/config/prompts:ro
+
+services:
+
+  # ── Saga UI (BFF + SPA) ─────────────────────────────────────────────────
+  saga-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: saga-ui:latest
+    container_name: saga-ui
+    restart: unless-stopped
+    ports:
+      - "${BFF_PORT:-8088}:8088"
+    environment:
+      # Points to the Saga API inside the shared Docker network
+      SAGA_BASE_URL: http://api:8000
+      SAGA_API_TOKEN: ${SAGA_API_TOKENS}
+      UI_USERNAME: ${UI_USERNAME}
+      UI_PASSWORD: ${UI_PASSWORD}
+      SESSION_SECRET: ${SESSION_SECRET}
+      SESSION_MAX_AGE: ${SESSION_MAX_AGE:-28800}
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-104857600}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      api:
+        # service_started (not service_healthy) because the BFF handles Saga
+        # unavailability gracefully via the health banner – no need to block here.
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8088/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ── Saga API ────────────────────────────────────────────────────────────
+  api:
+    build: *saga-build
+    # Brief sleep prevents a Docker Desktop DNS race condition on first start.
+    # After the sleep: stamp the DB as current head if alembic_version doesn't
+    # exist yet (happens after a fresh create_all bootstrap), then upgrade to
+    # head to apply any pending migrations.
+    command: >
+      sh -c "sleep 8 &&
+        (alembic current 2>/dev/null | grep -qE '[a-f0-9]' ||
+         alembic stamp 0003_merge_branches) &&
+        alembic upgrade head &&
+        exec saga-api"
+    environment: *app-env
+    volumes: *prompts-mount
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+
+  # ── Saga Worker (background processing) ─────────────────────────────────
+  worker:
+    build: *saga-build
+    command: ["sh", "-c", "sleep 8 && exec saga-worker"]
+    environment: *app-env
+    volumes: *prompts-mount
+    depends_on:
+      redis:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Saga MCP server ─────────────────────────────────────────────────────
+  mcp:
+    build: *saga-build
+    command: ["sh", "-c", "sleep 8 && exec saga-mcp"]
+    environment: *app-env
+    volumes: *prompts-mount
+    ports:
+      - "${MCP_PORT:-8100}:8100"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Document conversion ─────────────────────────────────────────────────────
+  docling:
+    image: quay.io/docling-project/docling-serve-cpu:latest
+    environment:
+      DOCLING_SERVE_ENABLE_UI: "false"
+      # Maximum seconds Docling will wait for a synchronous conversion before it
+      # returns HTTP 504. Must be below the converter client timeout_seconds (600 s).
+      DOCLING_SERVE_MAX_SYNC_WAIT: ${DOCLING_MAX_SYNC_WAIT:-540}
+    # No host port – only reachable within the Docker network (http://docling:5001)
+    restart: unless-stopped
+
+  kreuzberg:
+    image: ghcr.io/kreuzberg-dev/kreuzberg:latest
+    # No host port – only reachable within the Docker network (http://kreuzberg:8000)
+    restart: unless-stopped
+
+  # ── Infrastructure ──────────────────────────────────────────────────────────
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    environment:
+      discovery.type: single-node
+      bootstrap.memory_lock: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_PASSWORD}
+      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    # No host port – only reachable within the Docker network (http://opensearch:9200)
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+    restart: unless-stopped
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    environment:
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+    ports:
+      - "${OPENSEARCH_DASHBOARDS_PORT:-5601}:5601"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-saga}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-saga}
+      POSTGRES_DB: ${POSTGRES_DB:-saga}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # No host port – only reachable within the Docker network (postgres:5432)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-saga} -d ${POSTGRES_DB:-saga}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio-data:/data
+    # MinIO S3 API (9000) is internal only; console (9001) exposed for administration
+    ports:
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    # No host port – only reachable within the Docker network (redis://redis:6379)
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+
+volumes:
+  opensearch-data:
+  postgres-data:
+  minio-data:
+  redis-data:
+  ollama-data:

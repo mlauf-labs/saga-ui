@@ -1,0 +1,36 @@
+# ── Version control ───────────────────────────────────────────────────────────
+.git
+.gitignore
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+*.env
+
+# ── Python artefacts ──────────────────────────────────────────────────────────
+bff/.venv
+bff/__pycache__
+bff/**/__pycache__
+bff/.pytest_cache
+bff/.ruff_cache
+bff/tests
+
+# ── Node / frontend build cache ───────────────────────────────────────────────
+frontend/node_modules
+frontend/dist          # built by Docker; don't copy local build into context
+frontend/.vite
+
+# ── Compose variants & env examples ──────────────────────────────────────────
+docker-compose.full.yml
+.env.full.example
+
+# ── Documentation & tooling ───────────────────────────────────────────────────
+docs/
+*.md
+AGENTS.md
+LICENSE
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.cursor
+.vscode
+*.DS_Store
+Thumbs.db
