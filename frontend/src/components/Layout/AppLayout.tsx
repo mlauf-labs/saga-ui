@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ActionIcon,
   AppShell,
@@ -62,11 +62,16 @@ export default function AppLayout({
   const [navbarWidth, setNavbarWidth] = useState(280)
   const [asideWidth,  setAsideWidth ] = useState(420)
 
-  // Refs so drag handlers always read the current value without stale closures
+  // Refs so drag handlers always read the current value without stale closures.
+  // Synced in effects (after render) — React 19 disallows ref writes during render.
   const navbarWidthRef = useRef(navbarWidth)
   const asideWidthRef  = useRef(asideWidth)
-  navbarWidthRef.current = navbarWidth
-  asideWidthRef.current  = asideWidth
+  useEffect(() => {
+    navbarWidthRef.current = navbarWidth
+  }, [navbarWidth])
+  useEffect(() => {
+    asideWidthRef.current = asideWidth
+  }, [asideWidth])
 
   const startResizeNavbar = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
