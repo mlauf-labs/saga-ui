@@ -8,6 +8,7 @@ import MainPage from './pages/MainPage'
 import FoldersAdminPage from './pages/FoldersAdminPage'
 import DocTypesAdminPage from './pages/DocTypesAdminPage'
 import TimelinePage from './pages/TimelinePage'
+import AgendaPage from './pages/AgendaPage'
 import { useHealthCheck } from './hooks/useHealthCheck'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -70,6 +71,16 @@ export default function App() {
             <ProtectedRoute>
               <ErrorBoundary>
                 <TimelinePage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agenda"
+          element={
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <AgendaPage />
               </ErrorBoundary>
             </ProtectedRoute>
           }

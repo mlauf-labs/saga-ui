@@ -1,5 +1,5 @@
 import { Box, Group, Text, UnstyledButton } from '@mantine/core'
-import { IconFiles, IconFolders, IconSearch, IconTimeline, IconUpload } from '@tabler/icons-react'
+import { IconCalendarEvent, IconFiles, IconFolders, IconSearch, IconTimeline, IconUpload } from '@tabler/icons-react'
 import { useNavigate } from 'react-router-dom'
 
 export type MobileTab = 'documents' | 'search'
@@ -83,6 +83,11 @@ export default function BottomNav({
           icon={<IconTimeline size={22} />}
           label="Timeline"
           onClick={() => navigate('/timeline')}
+        />
+        <NavButton
+          icon={<IconCalendarEvent size={22} />}
+          label="Agenda"
+          onClick={() => navigate('/agenda')}
         />
         <NavButton
           icon={<IconUpload size={22} />}
