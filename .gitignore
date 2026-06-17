@@ -24,6 +24,9 @@ coverage/
 htmlcov/
 coverage.xml
 
+# Brainstorming companion scratch (mockups/session state)
+.superpowers/
+
 # OS / Editor
 .DS_Store
 Thumbs.db
