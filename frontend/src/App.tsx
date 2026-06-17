@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage'
 import MainPage from './pages/MainPage'
 import FoldersAdminPage from './pages/FoldersAdminPage'
 import DocTypesAdminPage from './pages/DocTypesAdminPage'
+import TimelinePage from './pages/TimelinePage'
 import { useHealthCheck } from './hooks/useHealthCheck'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -59,6 +60,16 @@ export default function App() {
             <ProtectedRoute>
               <ErrorBoundary>
                 <DocTypesAdminPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/timeline"
+          element={
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <TimelinePage />
               </ErrorBoundary>
             </ProtectedRoute>
           }

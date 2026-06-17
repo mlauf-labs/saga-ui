@@ -1,6 +1,6 @@
 import { Box, Group, Text, Title, Tooltip, ActionIcon, useMantineColorScheme } from '@mantine/core'
 import { NavLink as RouterNavLink } from 'react-router-dom'
-import { IconDatabase, IconFolders, IconFiles, IconMoon, IconSun, IconTag } from '@tabler/icons-react'
+import { IconDatabase, IconFolders, IconFiles, IconMoon, IconSun, IconTag, IconTimeline } from '@tabler/icons-react'
 import { useAuth } from '../../contexts/useAuth'
 import { useHealthCheck } from '../../hooks/useHealthCheck'
 
@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/', label: 'Documents', icon: IconFiles, end: true },
   { to: '/folders', label: 'Folders', icon: IconFolders, end: false },
   { to: '/doc-types', label: 'Doc Types', icon: IconTag, end: false },
+  { to: '/timeline', label: 'Timeline', icon: IconTimeline, end: false },
 ]
 
 interface AppHeaderProps {
