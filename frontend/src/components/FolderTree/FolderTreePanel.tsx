@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
+  ActionIcon,
   Alert,
   Badge,
   Box,
@@ -21,11 +22,13 @@ import {
   IconAlertCircle,
   IconChevronDown,
   IconChevronRight,
+  IconEye,
   IconFiles,
   IconFolder,
   IconFolderOpen,
   IconSearch,
 } from '@tabler/icons-react'
+import { Link } from 'react-router-dom'
 import { folders } from '../../api/client'
 import { filterTree, toTreeData, type FolderMeta } from '../../lib/tree-utils'
 
@@ -220,6 +223,21 @@ export default function FolderTreePanel({
                         {meta.documentCount}
                       </Badge>
                     )}
+
+                    {/* View affordance — navigates to /folders/:id without disrupting select */}
+                    <Tooltip label="View folder" openDelay={400}>
+                      <ActionIcon
+                        component={Link}
+                        to={`/folders/${node.value}`}
+                        size="xs"
+                        variant="subtle"
+                        color="gray"
+                        aria-label={`View folder ${labelText}`}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      >
+                        <IconEye size={12} />
+                      </ActionIcon>
+                    </Tooltip>
                   </Group>
                 )
               }}

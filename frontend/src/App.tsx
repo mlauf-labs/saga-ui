@@ -6,6 +6,7 @@ import LoadingScreen from './components/LoadingScreen'
 import LoginPage from './pages/LoginPage'
 import MainPage from './pages/MainPage'
 import FoldersAdminPage from './pages/FoldersAdminPage'
+import FolderViewPage from './pages/FolderViewPage'
 import DocTypesAdminPage from './pages/DocTypesAdminPage'
 import TimelinePage from './pages/TimelinePage'
 import AgendaPage from './pages/AgendaPage'
@@ -51,6 +52,16 @@ export default function App() {
             <ProtectedRoute>
               <ErrorBoundary>
                 <FoldersAdminPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/folders/:id"
+          element={
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <FolderViewPage />
               </ErrorBoundary>
             </ProtectedRoute>
           }
