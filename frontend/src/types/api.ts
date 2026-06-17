@@ -246,3 +246,59 @@ export interface HealthResponse {
 export interface UserInfo {
   username: string
 }
+
+// ── Timeline / events ───────────────────────────────────────────────────────
+
+export type EventCategory = 'audit' | 'content'
+
+export type EventType =
+  | 'doc_ingested'
+  | 'placement'
+  | 'move'
+  | 'reclassification'
+  | 'folder_created'
+  | 'folder_renamed'
+  | 'dated_fact'
+  | 'appointment'
+  | 'recurring'
+
+/** A single timeline event (named SagaEvent to avoid clashing with the DOM Event). */
+export interface SagaEvent {
+  event_id: string
+  category: EventCategory
+  event_type: EventType
+  document_id?: string | null
+  folder_id?: string | null
+  occurred_at?: string | null
+  recorded_at: string
+  actor: string
+  summary: string
+  confidence?: number | null
+  details: Record<string, unknown>
+}
+
+export interface TimelineResponse {
+  items: SagaEvent[]
+  limit: number
+  offset: number
+}
+
+export interface TimelineQueryParams {
+  category?: EventCategory
+  eventType?: EventType
+  folderId?: string
+  includeSubtree?: boolean
+  occurredFrom?: string
+  occurredTo?: string
+  expand?: boolean
+  limit: number
+  offset: number
+}
+
+export interface AgendaQueryParams {
+  folderId?: string
+  from?: string
+  to?: string
+  limit: number
+  offset: number
+}

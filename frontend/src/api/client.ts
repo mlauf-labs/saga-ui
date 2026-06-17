@@ -5,6 +5,7 @@
 
 import { dispatchUnauthorized } from '../lib/auth-events'
 import type {
+  AgendaQueryParams,
   DeleteFolderStrategy,
   DocType,
   DocTypeCreate,
@@ -16,6 +17,7 @@ import type {
   DocumentStatusResponse,
   EmojiSuggestRequest,
   EmojiSuggestResponse,
+  EventCategory,
   Folder,
   FolderCreate,
   FolderNode,
@@ -28,6 +30,8 @@ import type {
   NoteUpdate,
   SearchRequest,
   SearchResponse,
+  TimelineQueryParams,
+  TimelineResponse,
   UploadAcceptedResponse,
   UserInfo,
 } from '../types/api'
@@ -191,6 +195,56 @@ export const documents = {
         method: 'DELETE',
       }),
   },
+}
+
+// ── Timeline / Agenda ──────────────────────────────────────────────────────
+
+function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
+  const sp = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) sp.set(key, String(value))
+  }
+  const qs = sp.toString()
+  return qs ? `?${qs}` : ''
+}
+
+export const timeline = {
+  query: (p: TimelineQueryParams) =>
+    request<TimelineResponse>(
+      `/api/timeline${buildQuery({
+        category: p.category,
+        event_type: p.eventType,
+        folder_id: p.folderId,
+        include_subtree: p.includeSubtree,
+        occurred_from: p.occurredFrom,
+        occurred_to: p.occurredTo,
+        expand: p.expand,
+        limit: p.limit,
+        offset: p.offset,
+      })}`,
+    ),
+
+  forDocument: (id: string, p: { category?: EventCategory; limit: number; offset: number }) =>
+    request<TimelineResponse>(
+      `/api/documents/${encodeURIComponent(id)}/timeline${buildQuery({
+        category: p.category,
+        limit: p.limit,
+        offset: p.offset,
+      })}`,
+    ),
+}
+
+export const agenda = {
+  get: (p: AgendaQueryParams) =>
+    request<TimelineResponse>(
+      `/api/agenda${buildQuery({
+        folder_id: p.folderId,
+        from: p.from,
+        to: p.to,
+        limit: p.limit,
+        offset: p.offset,
+      })}`,
+    ),
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────
