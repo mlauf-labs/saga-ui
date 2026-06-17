@@ -47,6 +47,7 @@ import {
   IconFolder,
   IconFolders,
   IconHash,
+  IconHistory,
   IconLayoutSidebarRight,
   IconNotes,
   IconPhoto,
@@ -72,6 +73,7 @@ import {
 } from '../../lib/format'
 import type { DocumentResponse, DocumentStatus } from '../../types/api'
 import DocumentPreview, { DocumentMarkdownExpandButton } from './DocumentPreview'
+import { DocumentTimelineSection } from './DocumentTimelineSection'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -689,6 +691,9 @@ export default function DocumentDetailPanel({
               <Tabs.Tab value="preview" leftSection={<IconEye size={14} />}>
                 Preview
               </Tabs.Tab>
+              <Tabs.Tab value="timeline" leftSection={<IconHistory size={14} />}>
+                Timeline
+              </Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="info" style={{ flex: 1, overflow: 'auto' }}>
@@ -778,6 +783,12 @@ export default function DocumentDetailPanel({
                   <DocumentMarkdownExpandButton doc={doc} />
                 </Group>
                 <DocumentPreview doc={doc} />
+              </Stack>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="timeline" style={{ flex: 1, overflow: 'auto' }}>
+              <Stack gap="xs" p="md">
+                <DocumentTimelineSection documentId={doc.document_id} />
               </Stack>
             </Tabs.Panel>
           </Tabs>
@@ -901,6 +912,18 @@ export default function DocumentDetailPanel({
                 onUpdate={handleUpdateNote}
                 onRemove={handleRemoveNote}
               />
+
+              {/* Timeline */}
+              <Divider />
+              <Stack gap="xs">
+                <Group gap={4}>
+                  <IconHistory size={14} color="var(--mantine-color-dimmed)" />
+                  <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                    Timeline
+                  </Text>
+                </Group>
+                <DocumentTimelineSection documentId={doc.document_id} />
+              </Stack>
 
               {/* Preview */}
               <Divider />
