@@ -53,6 +53,31 @@ export function getMimeLabel(mimeType: string): string {
   return mimeType.split('/')[1]?.toUpperCase() ?? 'File'
 }
 
+// ── Relative time formatting ──────────────────────────────────────────────────
+
+const relativeFormatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+
+const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ['year', 1000 * 60 * 60 * 24 * 365],
+  ['month', 1000 * 60 * 60 * 24 * 30],
+  ['week', 1000 * 60 * 60 * 24 * 7],
+  ['day', 1000 * 60 * 60 * 24],
+  ['hour', 1000 * 60 * 60],
+  ['minute', 1000 * 60],
+]
+
+/** Human relative time, e.g. "in 12 days", "2 hours ago", "tomorrow". */
+export function formatRelative(iso: string, now: number = Date.now()): string {
+  const diffMs = new Date(iso).getTime() - now
+  const absMs = Math.abs(diffMs)
+  for (const [unit, unitMs] of RELATIVE_UNITS) {
+    if (absMs >= unitMs) {
+      return relativeFormatter.format(Math.round(diffMs / unitMs), unit)
+    }
+  }
+  return relativeFormatter.format(Math.round(diffMs / 1000), 'second')
+}
+
 // ── Document status ───────────────────────────────────────────────────────────
 
 export const STATUS_COLOR: Record<DocumentStatus, string> = {

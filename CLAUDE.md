@@ -131,10 +131,6 @@ After review + green CI, **squash-merge** into `develop`. Promote to `main` via 
   branch first.
 - **Conventional Commits**, imperative, English (`feat:`, `fix:`, `docs:`, `refactor:`,
   `test:`, `chore:`, `ci:`). Reference requirement IDs (e.g. `UI-FR-20`) where useful.
-- For Claude-authored commits, end the message with:
-  ```
-  Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
-  ```
 - Never commit `.env`, `node_modules/`, `dist/`, `__pycache__/` (all git-ignored) or any secret.
 
 ## What agents must not do

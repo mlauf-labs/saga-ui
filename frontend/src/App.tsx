@@ -6,7 +6,10 @@ import LoadingScreen from './components/LoadingScreen'
 import LoginPage from './pages/LoginPage'
 import MainPage from './pages/MainPage'
 import FoldersAdminPage from './pages/FoldersAdminPage'
+import FolderViewPage from './pages/FolderViewPage'
 import DocTypesAdminPage from './pages/DocTypesAdminPage'
+import TimelinePage from './pages/TimelinePage'
+import AgendaPage from './pages/AgendaPage'
 import { useHealthCheck } from './hooks/useHealthCheck'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -54,11 +57,41 @@ export default function App() {
           }
         />
         <Route
+          path="/folders/:id"
+          element={
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <FolderViewPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/doc-types"
           element={
             <ProtectedRoute>
               <ErrorBoundary>
                 <DocTypesAdminPage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/timeline"
+          element={
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <TimelinePage />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agenda"
+          element={
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <AgendaPage />
               </ErrorBoundary>
             </ProtectedRoute>
           }

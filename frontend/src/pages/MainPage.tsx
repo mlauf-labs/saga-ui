@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import AppLayout from '../components/Layout/AppLayout'
 import BottomNav, { type MobileTab } from '../components/Layout/BottomNav'
@@ -16,7 +17,19 @@ export default function MainPage() {
 
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null)
   const [activeFolderName, setActiveFolderName] = useState<string | null>(null)
-  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null)
+
+  // One-way URL→state sync: /?doc=<id> links (e.g. from EventRow) open the document panel.
+  // Read the param first so it can seed the initial state.
+  const [searchParams] = useSearchParams()
+  const docParam = searchParams.get('doc')
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(docParam)
+  // Derived-state update (React 19 pattern): keeps state in sync when docParam changes
+  // without an effect — safe because React bails out of the extra render automatically.
+  const [prevDocParam, setPrevDocParam] = useState(docParam)
+  if (docParam !== prevDocParam) {
+    setPrevDocParam(docParam)
+    if (docParam) setActiveDocumentId(docParam)
+  }
 
   // Search state: `searchInput` is the live value; `searchQuery` is the committed query.
   const [searchInput, setSearchInput] = useState('')

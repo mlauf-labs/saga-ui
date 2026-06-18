@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatBytes, formatDate, getMimeLabel, STATUS_COLOR, STATUS_LABEL } from './format'
+import { formatBytes, formatDate, getMimeLabel, STATUS_COLOR, STATUS_LABEL, formatRelative } from './format'
 
 // ── formatBytes ───────────────────────────────────────────────────────────────
 
@@ -97,5 +97,29 @@ describe('STATUS_LABEL', () => {
     expect(STATUS_LABEL.ready).toBe('Ready')
     expect(STATUS_LABEL.failed).toBe('Failed')
     expect(STATUS_LABEL.pending).toBe('Pending')
+  })
+})
+
+// ── formatRelative ────────────────────────────────────────────────────────────
+
+describe('formatRelative', () => {
+  const now = new Date('2026-06-17T12:00:00Z').getTime()
+
+  it('formats future days', () => {
+    // 5 days ahead — clearly in the "day" bucket (< 7 days, > 1 day)
+    expect(formatRelative('2026-06-22T12:00:00Z', now)).toBe('in 5 days')
+  })
+
+  it('formats past hours', () => {
+    expect(formatRelative('2026-06-17T10:00:00Z', now)).toBe('2 hours ago')
+  })
+
+  it('uses auto wording for ±1 day', () => {
+    expect(formatRelative('2026-06-18T12:00:00Z', now)).toBe('tomorrow')
+    expect(formatRelative('2026-06-16T12:00:00Z', now)).toBe('yesterday')
+  })
+
+  it('formats future months', () => {
+    expect(formatRelative('2026-09-17T12:00:00Z', now)).toBe('in 3 months')
   })
 })
