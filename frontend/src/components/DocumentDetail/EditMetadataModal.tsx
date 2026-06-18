@@ -24,6 +24,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { ApiClientError, docTypes, documents } from '../../api/client'
 import type { DocumentResponse, ExtractedValue } from '../../types/api'
+import MetadataEditor from '../common/MetadataEditor'
+import {
+  findReservedMetadataKey,
+  fromMetadataRows,
+  toMetadataRows,
+  type MetadataRow,
+} from '../../lib/metadata'
 
 // ── Extracted value row editor ────────────────────────────────────────────────
 
@@ -174,6 +181,7 @@ export default function EditMetadataModal({ opened, onClose, doc }: EditMetadata
   const [summary, setSummary] = useState('')
   const [docTypeId, setDocTypeId] = useState<string | null>(null)
   const [valueRows, setValueRows] = useState<ValueRow[]>([])
+  const [metaRows, setMetaRows] = useState<MetadataRow[]>([])
 
   const { data: docTypeList } = useQuery({
     queryKey: ['docTypes'],
@@ -195,6 +203,7 @@ export default function EditMetadataModal({ opened, onClose, doc }: EditMetadata
     setSummary(doc.summary ?? '')
     setDocTypeId(doc.doc_type_id ?? null)
     setValueRows((doc.extracted_values ?? []).map((v, i) => ({ ...v, _id: i })))
+    setMetaRows(toMetadataRows(doc.metadata ?? {}))
   } else if (!opened && wasOpen) {
     setWasOpen(false)
   }
@@ -220,6 +229,18 @@ export default function EditMetadataModal({ opened, onClose, doc }: EditMetadata
       })
       return
     }
+    // Metadata keys must not collide with SAGA-owned (reserved/`saga_`) frontmatter keys —
+    // mirror the backend so the user gets a clear message before the request 400s.
+    const reservedKey = findReservedMetadataKey(metaRows)
+    if (reservedKey) {
+      notifications.show({
+        title: 'Validation error',
+        message: `Metadata key "${reservedKey}" is reserved and cannot be used.`,
+        color: 'orange',
+        autoClose: 4000,
+      })
+      return
+    }
 
     setLoading(true)
     try {
@@ -228,6 +249,7 @@ export default function EditMetadataModal({ opened, onClose, doc }: EditMetadata
         summary: summary.trim() || null,
         doc_type_id: docTypeId,
         extracted_values: valueRows.map(({ _id: _unused, ...v }) => v),
+        metadata: fromMetadataRows(metaRows),
       })
       notifications.show({
         title: 'Document updated',
@@ -294,6 +316,11 @@ export default function EditMetadataModal({ opened, onClose, doc }: EditMetadata
 
         {/* Extracted values */}
         <ExtractedValuesEditor rows={valueRows} onChange={setValueRows} />
+
+        <Divider />
+
+        {/* Free-form metadata */}
+        <MetadataEditor rows={metaRows} onChange={setMetaRows} />
 
         <Divider />
 

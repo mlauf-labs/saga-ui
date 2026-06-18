@@ -49,6 +49,7 @@ import {
   IconHash,
   IconHistory,
   IconLayoutSidebarRight,
+  IconListDetails,
   IconNotes,
   IconPhoto,
   IconRefresh,
@@ -212,6 +213,52 @@ function ExtractedValuesSection({ doc }: { doc: DocumentResponse }) {
                   <Text size="xs" c="dimmed">
                     {ev.type}
                   </Text>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </ScrollArea>
+    </Stack>
+  )
+}
+
+// ── Free-form metadata ─────────────────────────────────────────────────────────
+
+function MetadataSection({ doc }: { doc: DocumentResponse }) {
+  const entries = Object.entries(doc.metadata ?? {})
+  if (entries.length === 0) return null
+  return (
+    <Stack gap="xs">
+      <Group gap={4}>
+        <IconListDetails size={14} color="var(--mantine-color-dimmed)" />
+        <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+          Metadata
+        </Text>
+      </Group>
+      <ScrollArea type="auto" scrollbars="x" styles={{ root: { width: '100%' } }}>
+        <Table
+          striped
+          withTableBorder
+          withColumnBorders
+          fz="xs"
+          style={{ tableLayout: 'auto', whiteSpace: 'nowrap' }}
+          styles={{ td: { padding: '4px 8px' }, th: { padding: '4px 8px' } }}
+        >
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Key</Table.Th>
+              <Table.Th>Value</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {entries.map(([key, value]) => (
+              <Table.Tr key={key}>
+                <Table.Td>
+                  <Code fz="xs">{key}</Code>
+                </Table.Td>
+                <Table.Td>
+                  <Text size="xs">{value}</Text>
                 </Table.Td>
               </Table.Tr>
             ))}
@@ -762,6 +809,12 @@ export default function DocumentDetailPanel({
                     <ExtractedValuesSection doc={doc} />
                   </>
                 )}
+                {Object.keys(doc.metadata ?? {}).length > 0 && (
+                  <>
+                    <Divider />
+                    <MetadataSection doc={doc} />
+                  </>
+                )}
               </Stack>
             </Tabs.Panel>
 
@@ -902,6 +955,14 @@ export default function DocumentDetailPanel({
                     No values extracted
                   </Text>
                 </Stack>
+              )}
+
+              {/* Free-form metadata */}
+              {Object.keys(doc.metadata ?? {}).length > 0 && (
+                <>
+                  <Divider />
+                  <MetadataSection doc={doc} />
+                </>
               )}
 
               {/* Notes */}
