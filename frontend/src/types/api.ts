@@ -47,6 +47,7 @@ export interface DocumentResponse {
   doc_type_id: string | null
   summary: string | null
   extracted_values: ExtractedValue[]
+  metadata: Record<string, string>
   folders: FolderRef[]
   primary_folder_path: string[]
   notes: Note[]
@@ -80,6 +81,7 @@ export interface DocumentPatch {
   summary?: string | null
   doc_type_id?: string | null
   extracted_values?: ExtractedValue[]
+  metadata?: Record<string, string>
 }
 
 /** Keyword document search over title/summary/content/metadata. */
