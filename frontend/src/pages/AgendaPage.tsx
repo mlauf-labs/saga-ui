@@ -1,10 +1,14 @@
-import { Stack, Text, Title } from '@mantine/core'
+import { useState } from 'react'
+import { Group, Stack, Text, Title } from '@mantine/core'
 import AdminLayout from '../components/Layout/AdminLayout'
+import { DateRangeFilter } from '../components/Timeline/DateRangeFilter'
+import { rangeToBounds, type DateRange } from '../lib/date-range'
 import { EventList } from '../components/Timeline/EventList'
 import { useAgenda } from '../hooks/useAgenda'
 
 export default function AgendaPage() {
-  const q = useAgenda()
+  const [range, setRange] = useState<DateRange>([null, null])
+  const q = useAgenda(rangeToBounds(range))
   return (
     <AdminLayout>
       <Stack gap="md">
@@ -12,6 +16,9 @@ export default function AgendaPage() {
         <Text size="sm" c="dimmed">
           Upcoming appointments, deadlines, and recurring obligations.
         </Text>
+        <Group>
+          <DateRangeFilter value={range} onChange={setRange} label="Limit to a date range" />
+        </Group>
         <EventList
           events={q.events}
           documents={q.documents}
