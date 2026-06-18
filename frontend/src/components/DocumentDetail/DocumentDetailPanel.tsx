@@ -73,16 +73,11 @@ import {
   STATUS_LABEL,
 } from '../../lib/format'
 import type { DocumentResponse, DocumentStatus } from '../../types/api'
+import { isTerminal } from '../../lib/document-status'
 import DocumentPreview, { DocumentMarkdownExpandButton } from './DocumentPreview'
 import { DocumentTimelineSection } from './DocumentTimelineSection'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-const TERMINAL_STATUSES: DocumentStatus[] = ['ready', 'failed']
-
-function isTerminal(status: DocumentStatus): boolean {
-  return TERMINAL_STATUSES.includes(status)
-}
 
 function MimeIcon({ mimeType, size = 20 }: { mimeType: string; size?: number }) {
   const t = mimeType.toLowerCase()
