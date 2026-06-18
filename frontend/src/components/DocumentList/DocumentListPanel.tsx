@@ -28,6 +28,7 @@ import {
 } from '@tabler/icons-react'
 import { docTypes, documents, folders } from '../../api/client'
 import { formatBytes, formatDate, getMimeLabel, STATUS_COLOR, STATUS_LABEL } from '../../lib/format'
+import { isTerminal } from '../../lib/document-status'
 import type { DocumentResponse, DocumentStatus } from '../../types/api'
 
 const PAGE_SIZE = 25
@@ -222,6 +223,12 @@ export default function DocumentListPanel({
         ? folders.documents(activeFolderId, true, page, PAGE_SIZE)
         : documents.list(page, PAGE_SIZE),
     placeholderData: (prev) => prev,
+    // Poll while any listed document is still going through the pipeline, so the
+    // overview's status badges update live like the detail view does.
+    refetchInterval: (query) => {
+      const items = query.state.data?.items
+      return items?.some((d) => !isTerminal(d.status)) ? 3000 : false
+    },
   })
 
   const { data: docTypeList } = useQuery({
