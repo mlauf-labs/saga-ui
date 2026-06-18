@@ -1,11 +1,20 @@
 import { Anchor, Badge, Group, Stack, Text } from '@mantine/core'
 import { Link } from 'react-router-dom'
 import { formatRelative } from '../../lib/format'
+import { describeRecurrence } from '../../lib/recurrence'
 import type { SagaEvent } from '../../types/api'
 
 const CATEGORY_COLOR: Record<SagaEvent['category'], string> = {
   audit: 'blue',
   content: 'teal',
+}
+
+/** The recurrence cadence for a recurring event, e.g. "Every month · until 01/06/2090". */
+function recurrence(event: SagaEvent): string | null {
+  const rule = event.details.recurrence
+  if (event.event_type !== 'recurring' && typeof rule !== 'string') return null
+  const end = typeof event.details.end_date === 'string' ? event.details.end_date : undefined
+  return describeRecurrence(typeof rule === 'string' ? rule : undefined, end)
 }
 
 interface EventRowProps {
@@ -25,6 +34,7 @@ function rationale(details: SagaEvent['details']): string | null {
 export function EventRow({ event, showRelative = false, documents }: EventRowProps) {
   const when = event.occurred_at ?? event.recorded_at
   const why = rationale(event.details)
+  const cadence = recurrence(event)
   // Prefer the resolved document title; fall back to a generic "document" label.
   const title = event.document_id ? documents?.[event.document_id] : undefined
   // Prefer the document link; fall back to the folder (e.g. folder_created or a placement
@@ -41,6 +51,11 @@ export function EventRow({ event, showRelative = false, documents }: EventRowPro
       </Badge>
       <Stack gap={0} style={{ flex: 1 }}>
         <Text size="sm">{event.summary}</Text>
+        {cadence ? (
+          <Text size="xs" c="teal.7" fw={500}>
+            🔁 {cadence}
+          </Text>
+        ) : null}
         {why ? (
           <Text size="xs" c="dimmed" fs="italic">
             {why}
