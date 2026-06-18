@@ -79,4 +79,19 @@ describe('EventRow', () => {
     renderRow({ ...base, details: { reason: 'Similar to last month’s invoice.' } })
     expect(screen.getByText('Similar to last month’s invoice.')).toBeInTheDocument()
   })
+
+  it('shows the recurrence cadence for a recurring event', () => {
+    renderRow({
+      ...base,
+      event_type: 'recurring',
+      summary: 'Pension contribution',
+      details: { recurrence: 'FREQ=MONTHLY' },
+    })
+    expect(screen.getByText('🔁 Every month')).toBeInTheDocument()
+  })
+
+  it('does not show a cadence for a non-recurring event', () => {
+    renderRow({ ...base, event_type: 'dated_fact' })
+    expect(screen.queryByText(/🔁/)).toBeNull()
+  })
 })
