@@ -22,6 +22,7 @@ export default function AgendaPage() {
           onLoadMore={q.fetchNextPage}
           isLoadingMore={q.isFetchingNextPage}
           emptyMessage="Nothing coming up."
+          errorTitle="Failed to load agenda"
         />
       </Stack>
     </Container>

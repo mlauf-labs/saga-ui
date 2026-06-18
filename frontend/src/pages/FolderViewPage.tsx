@@ -65,6 +65,7 @@ export default function FolderViewPage() {
           onLoadMore={logQ.fetchNextPage}
           isLoadingMore={logQ.isFetchingNextPage}
           emptyMessage="No changes recorded for this folder."
+          errorTitle="Failed to load the folder change log"
         />
       </Stack>
     </Container>
