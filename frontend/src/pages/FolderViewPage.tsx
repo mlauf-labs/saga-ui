@@ -1,7 +1,8 @@
-import { Anchor, Container, Divider, Group, Stack, Text, Title } from '@mantine/core'
+import { Anchor, Divider, Group, Stack, Text, Title } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { folders } from '../api/client'
+import AdminLayout from '../components/Layout/AdminLayout'
 import { EventList } from '../components/Timeline/EventList'
 import { useTimeline } from '../hooks/useTimeline'
 
@@ -23,7 +24,7 @@ export default function FolderViewPage() {
   const logQ = useTimeline({ folderId: id })
 
   return (
-    <Container size="md" py="md">
+    <AdminLayout>
       <Stack gap="md">
         <Anchor component={Link} to="/folders" size="sm">
           ‹ Folders
@@ -58,6 +59,7 @@ export default function FolderViewPage() {
 
         <EventList
           events={logQ.events}
+          documents={logQ.documents}
           isLoading={logQ.isLoading}
           isError={logQ.isError}
           onRetry={logQ.refetch}
@@ -68,6 +70,6 @@ export default function FolderViewPage() {
           errorTitle="Failed to load the folder change log"
         />
       </Stack>
-    </Container>
+    </AdminLayout>
   )
 }
