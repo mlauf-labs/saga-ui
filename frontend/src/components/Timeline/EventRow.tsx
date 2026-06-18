@@ -12,6 +12,8 @@ interface EventRowProps {
   event: SagaEvent
   /** Show a relative time ("in 12 days") instead of the absolute timestamp's time. */
   showRelative?: boolean
+  /** Map of document id → title, used to label the document link. */
+  documents?: Record<string, string>
 }
 
 /** The optional human-readable rationale an audit event may carry in `details.reason`. */
@@ -20,13 +22,15 @@ function rationale(details: SagaEvent['details']): string | null {
   return typeof reason === 'string' && reason.trim() ? reason : null
 }
 
-export function EventRow({ event, showRelative = false }: EventRowProps) {
+export function EventRow({ event, showRelative = false, documents }: EventRowProps) {
   const when = event.occurred_at ?? event.recorded_at
   const why = rationale(event.details)
+  // Prefer the resolved document title; fall back to a generic "document" label.
+  const title = event.document_id ? documents?.[event.document_id] : undefined
   // Prefer the document link; fall back to the folder (e.g. folder_created or a placement
   // event with no document) so each event points at the surface that explains it.
   const target = event.document_id
-    ? { to: `/?doc=${event.document_id}`, label: 'document' }
+    ? { to: `/?doc=${event.document_id}`, label: title ?? 'document' }
     : event.folder_id
       ? { to: `/folders/${event.folder_id}`, label: 'folder' }
       : null
@@ -48,7 +52,13 @@ export function EventRow({ event, showRelative = false }: EventRowProps) {
           {target ? (
             <>
               {' · '}
-              <Anchor component={Link} to={target.to} size="xs">
+              <Anchor
+                component={Link}
+                to={target.to}
+                size="xs"
+                style={{ display: 'inline-block', maxWidth: 320, verticalAlign: 'bottom' }}
+                truncate="end"
+              >
                 {target.label}
               </Anchor>
             </>

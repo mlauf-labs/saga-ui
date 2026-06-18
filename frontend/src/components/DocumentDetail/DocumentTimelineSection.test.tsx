@@ -26,6 +26,7 @@ describe('DocumentTimelineSection', () => {
       ],
       limit: 50,
       offset: 0,
+      documents: {},
     })
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(

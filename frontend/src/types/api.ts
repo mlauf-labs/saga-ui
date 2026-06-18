@@ -283,6 +283,8 @@ export interface TimelineResponse {
   items: SagaEvent[]
   limit: number
   offset: number
+  /** Map of document id → title for the documents referenced by these events. */
+  documents: Record<string, string>
 }
 
 export interface TimelineQueryParams {

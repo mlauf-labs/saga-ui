@@ -28,6 +28,7 @@ describe('useTimeline', () => {
       ],
       limit: 50,
       offset: 0,
+      documents: { d1: 'Invoice.pdf' },
     })
 
     const { result } = renderHook(() => useTimeline({ category: 'audit' }), { wrapper })
@@ -35,6 +36,7 @@ describe('useTimeline', () => {
 
     expect(spy).toHaveBeenCalledWith(expect.objectContaining({ category: 'audit', offset: 0 }))
     expect(result.current.events[0].event_id).toBe('e1')
+    expect(result.current.documents).toEqual({ d1: 'Invoice.pdf' })
     expect(result.current.hasMore).toBe(false)
   })
 })

@@ -16,6 +16,8 @@ interface EventListProps {
   emptyMessage?: string
   /** Surface-specific error heading (this component renders timelines and the agenda). */
   errorTitle?: string
+  /** Map of document id → title, forwarded to each row to label the document link. */
+  documents?: Record<string, string>
 }
 
 function groupKey(e: SagaEvent): string {
@@ -47,6 +49,7 @@ export function EventList({
   isLoadingMore = false,
   emptyMessage = 'No events yet.',
   errorTitle = 'Failed to load timeline',
+  documents,
 }: EventListProps) {
   if (isLoading) {
     return (
@@ -83,7 +86,12 @@ export function EventList({
             {formatDate(items[0].occurred_at ?? items[0].recorded_at)}
           </Text>
           {items.map((e) => (
-            <EventRow key={e.event_id} event={e} showRelative={showRelative} />
+            <EventRow
+              key={e.event_id}
+              event={e}
+              showRelative={showRelative}
+              documents={documents}
+            />
           ))}
         </Stack>
       ))}

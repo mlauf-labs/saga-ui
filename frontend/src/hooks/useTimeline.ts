@@ -6,11 +6,22 @@ const PAGE_SIZE = 50
 
 type TimelineFilters = Omit<TimelineQueryParams, 'limit' | 'offset'>
 
-function flatten(pages: { items: SagaEvent[] }[] | undefined): SagaEvent[] {
+type TimelinePage = {
+  items: SagaEvent[]
+  limit: number
+  offset: number
+  documents?: Record<string, string>
+}
+
+function flatten(pages: TimelinePage[] | undefined): SagaEvent[] {
   return (pages ?? []).flatMap((p) => p.items)
 }
 
-function nextOffset(last: { items: SagaEvent[]; limit: number; offset: number }): number | undefined {
+function mergeDocuments(pages: TimelinePage[] | undefined): Record<string, string> {
+  return Object.assign({}, ...(pages ?? []).map((p) => p.documents ?? {}))
+}
+
+function nextOffset(last: TimelinePage): number | undefined {
   return last.items.length === last.limit ? last.offset + last.limit : undefined
 }
 
@@ -25,6 +36,7 @@ export function useTimeline(filters: TimelineFilters = {}) {
   return {
     ...query,
     events: flatten(query.data?.pages),
+    documents: mergeDocuments(query.data?.pages),
     hasMore: Boolean(query.hasNextPage),
   }
 }
@@ -38,5 +50,10 @@ export function useDocumentTimeline(id: string, filters: { category?: EventCateg
     getNextPageParam: nextOffset,
     enabled: Boolean(id),
   })
-  return { ...query, events: flatten(query.data?.pages), hasMore: Boolean(query.hasNextPage) }
+  return {
+    ...query,
+    events: flatten(query.data?.pages),
+    documents: mergeDocuments(query.data?.pages),
+    hasMore: Boolean(query.hasNextPage),
+  }
 }
