@@ -55,4 +55,9 @@ describe('EventList', () => {
     renderList({ events: [], isError: true })
     expect(screen.getByText(/failed to load/i)).toBeInTheDocument()
   })
+
+  it('uses a surface-specific error title when given', () => {
+    renderList({ events: [], isError: true, errorTitle: 'Failed to load agenda' })
+    expect(screen.getByText('Failed to load agenda')).toBeInTheDocument()
+  })
 })

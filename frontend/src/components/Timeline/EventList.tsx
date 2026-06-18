@@ -14,6 +14,8 @@ interface EventListProps {
   onLoadMore?: () => void
   isLoadingMore?: boolean
   emptyMessage?: string
+  /** Surface-specific error heading (this component renders timelines and the agenda). */
+  errorTitle?: string
 }
 
 function groupKey(e: SagaEvent): string {
@@ -44,6 +46,7 @@ export function EventList({
   onLoadMore,
   isLoadingMore = false,
   emptyMessage = 'No events yet.',
+  errorTitle = 'Failed to load timeline',
 }: EventListProps) {
   if (isLoading) {
     return (
@@ -56,7 +59,7 @@ export function EventList({
   }
   if (isError) {
     return (
-      <Alert color="red" title="Failed to load timeline">
+      <Alert color="red" title={errorTitle}>
         <Button variant="light" size="xs" mt="xs" onClick={onRetry}>
           Retry
         </Button>

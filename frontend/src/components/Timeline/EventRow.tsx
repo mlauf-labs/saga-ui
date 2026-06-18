@@ -14,8 +14,22 @@ interface EventRowProps {
   showRelative?: boolean
 }
 
+/** The optional human-readable rationale an audit event may carry in `details.reason`. */
+function rationale(details: SagaEvent['details']): string | null {
+  const reason = details.reason
+  return typeof reason === 'string' && reason.trim() ? reason : null
+}
+
 export function EventRow({ event, showRelative = false }: EventRowProps) {
   const when = event.occurred_at ?? event.recorded_at
+  const why = rationale(event.details)
+  // Prefer the document link; fall back to the folder (e.g. folder_created or a placement
+  // event with no document) so each event points at the surface that explains it.
+  const target = event.document_id
+    ? { to: `/?doc=${event.document_id}`, label: 'document' }
+    : event.folder_id
+      ? { to: `/folders/${event.folder_id}`, label: 'folder' }
+      : null
   return (
     <Group align="flex-start" gap="sm" wrap="nowrap" py={4}>
       <Badge color={CATEGORY_COLOR[event.category]} variant="light" size="sm">
@@ -23,14 +37,19 @@ export function EventRow({ event, showRelative = false }: EventRowProps) {
       </Badge>
       <Stack gap={0} style={{ flex: 1 }}>
         <Text size="sm">{event.summary}</Text>
+        {why ? (
+          <Text size="xs" c="dimmed" fs="italic">
+            {why}
+          </Text>
+        ) : null}
         <Text size="xs" c="dimmed">
           {event.event_type} · {event.actor}
           {showRelative ? ` · ${formatRelative(when)}` : ''}
-          {event.document_id ? (
+          {target ? (
             <>
               {' · '}
-              <Anchor component={Link} to={`/?doc=${event.document_id}`} size="xs">
-                document
+              <Anchor component={Link} to={target.to} size="xs">
+                {target.label}
               </Anchor>
             </>
           ) : null}

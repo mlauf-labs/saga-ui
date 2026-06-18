@@ -43,4 +43,26 @@ describe('EventRow', () => {
     expect(screen.getByText('content')).toBeInTheDocument()
     expect(screen.queryByRole('link')).toBeNull()
   })
+
+  it('falls back to a folder link when there is no document', () => {
+    renderRow({
+      ...base,
+      event_type: 'folder_created',
+      document_id: null,
+      folder_id: 'f9',
+    })
+    const link = screen.getByRole('link')
+    expect(link).toHaveAttribute('href', '/folders/f9')
+    expect(link).toHaveTextContent('folder')
+  })
+
+  it('prefers the document link when both document and folder are present', () => {
+    renderRow({ ...base, folder_id: 'f9' })
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/?doc=d1')
+  })
+
+  it('shows the rationale from details.reason when present', () => {
+    renderRow({ ...base, details: { reason: 'Similar to last month’s invoice.' } })
+    expect(screen.getByText('Similar to last month’s invoice.')).toBeInTheDocument()
+  })
 })
