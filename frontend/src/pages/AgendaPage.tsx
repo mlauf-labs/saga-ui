@@ -1,11 +1,12 @@
-import { Container, Stack, Text, Title } from '@mantine/core'
+import { Stack, Text, Title } from '@mantine/core'
+import AdminLayout from '../components/Layout/AdminLayout'
 import { EventList } from '../components/Timeline/EventList'
 import { useAgenda } from '../hooks/useAgenda'
 
 export default function AgendaPage() {
   const q = useAgenda()
   return (
-    <Container size="md" py="md">
+    <AdminLayout>
       <Stack gap="md">
         <Title order={3}>Agenda</Title>
         <Text size="sm" c="dimmed">
@@ -13,6 +14,7 @@ export default function AgendaPage() {
         </Text>
         <EventList
           events={q.events}
+          documents={q.documents}
           order="asc"
           showRelative
           isLoading={q.isLoading}
@@ -25,6 +27,6 @@ export default function AgendaPage() {
           errorTitle="Failed to load agenda"
         />
       </Stack>
-    </Container>
+    </AdminLayout>
   )
 }

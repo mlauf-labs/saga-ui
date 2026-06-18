@@ -4,9 +4,17 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as client from '../api/client'
+import { AuthContext, type AuthState } from '../contexts/auth-context'
 import FolderViewPage from './FolderViewPage'
 
 afterEach(() => vi.restoreAllMocks())
+
+const authValue: AuthState = {
+  user: { username: 'tester' },
+  loading: false,
+  login: vi.fn(),
+  logout: vi.fn(),
+}
 
 describe('FolderViewPage', () => {
   it('shows the folder name and its change log', async () => {
@@ -42,16 +50,19 @@ describe('FolderViewPage', () => {
       ],
       limit: 50,
       offset: 0,
+      documents: {},
     })
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <MantineProvider>
         <QueryClientProvider client={qc}>
-          <MemoryRouter initialEntries={['/folders/f1']}>
-            <Routes>
-              <Route path="/folders/:id" element={<FolderViewPage />} />
-            </Routes>
-          </MemoryRouter>
+          <AuthContext.Provider value={authValue}>
+            <MemoryRouter initialEntries={['/folders/f1']}>
+              <Routes>
+                <Route path="/folders/:id" element={<FolderViewPage />} />
+              </Routes>
+            </MemoryRouter>
+          </AuthContext.Provider>
         </QueryClientProvider>
       </MantineProvider>,
     )

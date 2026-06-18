@@ -15,9 +15,12 @@ export function useAgenda(filters: AgendaFilters = {}) {
     getNextPageParam: (last) =>
       last.items.length === last.limit ? last.offset + last.limit : undefined,
   })
+  const pages: { items: SagaEvent[]; documents?: Record<string, string> }[] =
+    query.data?.pages ?? []
   return {
     ...query,
-    events: (query.data?.pages ?? []).flatMap((p: { items: SagaEvent[] }) => p.items),
+    events: pages.flatMap((p) => p.items),
+    documents: Object.assign({}, ...pages.map((p) => p.documents ?? {})),
     hasMore: Boolean(query.hasNextPage),
   }
 }

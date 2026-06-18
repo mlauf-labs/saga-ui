@@ -4,18 +4,28 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as client from '../api/client'
+import { AuthContext, type AuthState } from '../contexts/auth-context'
 import TimelinePage from './TimelinePage'
 
 afterEach(() => vi.restoreAllMocks())
+
+const authValue: AuthState = {
+  user: { username: 'tester' },
+  loading: false,
+  login: vi.fn(),
+  logout: vi.fn(),
+}
 
 function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <MantineProvider>
       <QueryClientProvider client={qc}>
-        <MemoryRouter>
-          <TimelinePage />
-        </MemoryRouter>
+        <AuthContext.Provider value={authValue}>
+          <MemoryRouter>
+            <TimelinePage />
+          </MemoryRouter>
+        </AuthContext.Provider>
       </QueryClientProvider>
     </MantineProvider>,
   )
@@ -37,6 +47,7 @@ describe('TimelinePage', () => {
       ],
       limit: 50,
       offset: 0,
+      documents: {},
     })
     renderPage()
     await waitFor(() => expect(screen.getByText('Placed in Finanzen')).toBeInTheDocument())

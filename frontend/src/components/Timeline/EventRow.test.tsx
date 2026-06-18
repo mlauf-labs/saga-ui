@@ -5,11 +5,11 @@ import { describe, expect, it } from 'vitest'
 import type { SagaEvent } from '../../types/api'
 import { EventRow } from './EventRow'
 
-function renderRow(event: SagaEvent) {
+function renderRow(event: SagaEvent, documents?: Record<string, string>) {
   return render(
     <MantineProvider>
       <MemoryRouter>
-        <EventRow event={event} />
+        <EventRow event={event} documents={documents} />
       </MemoryRouter>
     </MantineProvider>,
   )
@@ -36,6 +36,20 @@ describe('EventRow', () => {
   it('links to the document via ?doc when document_id is present', () => {
     renderRow(base)
     expect(screen.getByRole('link')).toHaveAttribute('href', '/?doc=d1')
+  })
+
+  it('uses the document title from the documents map as the link text', () => {
+    renderRow(base, { d1: 'Invoice March 2026.pdf' })
+    const link = screen.getByRole('link')
+    expect(link).toHaveAttribute('href', '/?doc=d1')
+    expect(link).toHaveTextContent('Invoice March 2026.pdf')
+  })
+
+  it('falls back to "document" when no title is available in the map', () => {
+    renderRow(base)
+    const link = screen.getByRole('link')
+    expect(link).toHaveAttribute('href', '/?doc=d1')
+    expect(link).toHaveTextContent('document')
   })
 
   it('renders content events without a document link when none', () => {

@@ -10,6 +10,7 @@ export function DocumentTimelineSection({ documentId }: DocumentTimelineSectionP
   return (
     <EventList
       events={q.events}
+      documents={q.documents}
       isLoading={q.isLoading}
       isError={q.isError}
       onRetry={q.refetch}
