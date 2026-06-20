@@ -16,7 +16,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import Scope
 
-from app import auth, proxy
+from app import agents, auth, proxy
 from app.config import get_settings
 from app.saga_client import close_client, init_client
 
@@ -91,6 +91,7 @@ def create_app() -> FastAPI:
 
     # Routers
     app.include_router(auth.router)
+    app.include_router(agents.router)
     app.include_router(proxy.router)
 
     @app.get("/health", tags=["system"])
@@ -112,6 +113,7 @@ def create_app() -> FastAPI:
             "version": "0.1.0",
             "saga_reachable": saga_ok,
             "store_name": store_name,
+            "agents_configured": bool(get_settings().agents_base_url),
         }
 
     # Serve built frontend (production mode) with SPA fallback for client-side routes

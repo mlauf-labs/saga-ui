@@ -90,7 +90,9 @@ async def login(
     password_ok = secrets.compare_digest(body.password, settings.ui_password)
     if not (username_ok and password_ok):
         # Log failed attempt with username but never the password (UI-NFR-9)
-        log.warning("login_failed username=%r ip=%s", body.username, request.client and request.client.host)
+        log.warning(
+            "login_failed username=%r ip=%s", body.username, request.client and request.client.host
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password.",

@@ -243,6 +243,7 @@ export interface HealthResponse {
   version: string
   saga_reachable: boolean | null
   store_name?: string
+  agents_configured?: boolean
 }
 
 export interface UserInfo {
@@ -305,4 +306,70 @@ export interface AgendaQueryParams {
   to?: string
   limit: number
   offset: number
+}
+
+// ── Statistics ───────────────────────────────────────────────────────────────
+
+export interface ArchiveCounts {
+  documents_total: number
+  documents_by_status: Record<string, number>
+  documents_by_doc_type: Record<string, number>
+  documents_by_mime: Record<string, number>
+  documents_without_folder: number
+  documents_without_doc_type: number
+  folders_total: number
+  doc_types_total: number
+  events_by_category: Record<string, number>
+  document_notes_total: number
+  folder_notes_total: number
+  size_bytes_sum: number
+  size_bytes_max: number
+  size_bytes_avg: number
+}
+
+export interface StorageSnapshot {
+  postgres_bytes: number | null
+  opensearch_bytes: number | null
+  opensearch_docs: number | null
+  minio_bytes: number | null
+  minio_objects: number | null
+  redis_bytes: number | null
+  queue_depth: number | null
+}
+
+export interface Snapshot {
+  counts: ArchiveCounts
+  storage: StorageSnapshot
+  chunks_total: number | null
+}
+
+export interface StageAggregate {
+  count: number
+  avg_ms: number
+  min_ms: number
+  max_ms: number
+}
+
+export interface TokenAggregate {
+  step: string
+  model: string
+  kind: string
+  tokens: number
+}
+
+export interface PipelineAggregates {
+  stages: Record<string, StageAggregate>
+  tokens: TokenAggregate[]
+  ingest: Record<string, number>
+}
+
+export interface StatsResponse {
+  snapshot: Snapshot
+  pipeline: PipelineAggregates
+}
+
+export interface AgentsStatsResponse {
+  agents: { id: string; enabled: boolean }[]
+  proposals: Record<string, number>
+  runtime: { agent_count: number }
 }
