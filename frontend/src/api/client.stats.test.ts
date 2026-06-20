@@ -21,5 +21,6 @@ describe('stats client', () => {
     ))
     const result = await stats.agents()
     expect(result.runtime.agent_count).toBe(0)
+    expect(fetch).toHaveBeenCalledWith('/api/agents-stats', expect.anything())
   })
 })

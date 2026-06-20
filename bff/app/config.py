@@ -50,7 +50,8 @@ class Settings(BaseSettings):
         return (
             f"Settings(saga_base_url={self.saga_base_url!r}, "
             f"ui_username={self.ui_username!r}, "
-            f"saga_api_token=***, ui_password=***, session_secret=***)"
+            f"agents_base_url={self.agents_base_url!r}, "
+            f"saga_api_token=***, ui_password=***, session_secret=***, agents_token=***)"
         )
 
 
