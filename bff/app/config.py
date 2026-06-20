@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # Limits
     max_upload_bytes: int = 100 * 1024 * 1024  # 100 MB
 
+    # Optional saga-agents integration
+    agents_base_url: str = ""
+    agents_token: str = ""
+
     # Misc
     log_level: str = "INFO"
     debug: bool = False

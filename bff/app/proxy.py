@@ -43,8 +43,7 @@ def _forward_headers(request: Request) -> dict[str, str]:
     return {
         k: v
         for k, v in request.headers.items()
-        if k.lower() not in _SKIP_REQUEST_HEADERS
-        and not k.lower().startswith("cookie")
+        if k.lower() not in _SKIP_REQUEST_HEADERS and not k.lower().startswith("cookie")
     }
 
 
@@ -88,9 +87,7 @@ async def proxy(
         ) from exc
 
     resp_headers = {
-        k: v
-        for k, v in upstream.headers.items()
-        if k.lower() not in _SKIP_RESPONSE_HEADERS
+        k: v for k, v in upstream.headers.items() if k.lower() not in _SKIP_RESPONSE_HEADERS
     }
 
     content_type = upstream.headers.get("content-type", "")
