@@ -6,6 +6,7 @@ interface MobileDetailSheetProps {
   onClose: () => void
   documentId: string | null
   onDocumentDeleted: () => void
+  onFolderNavigate?: (folderId: string, folderName: string) => void
 }
 
 export default function MobileDetailSheet({
@@ -13,6 +14,7 @@ export default function MobileDetailSheet({
   onClose,
   documentId,
   onDocumentDeleted,
+  onFolderNavigate,
 }: MobileDetailSheetProps) {
   return (
     <Drawer
@@ -52,6 +54,7 @@ export default function MobileDetailSheet({
           onDocumentDeleted()
           onClose()
         }}
+        onFolderNavigate={onFolderNavigate}
       />
     </Drawer>
   )
