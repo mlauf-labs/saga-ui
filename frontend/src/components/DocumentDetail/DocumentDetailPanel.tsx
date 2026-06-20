@@ -6,7 +6,7 @@
  * Polls the document endpoint every 3 seconds while non-terminal.
  */
 
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   ActionIcon,
   Alert,
@@ -55,13 +55,13 @@ import {
   IconRefresh,
   IconRefreshDot,
   IconReplace,
-  IconStarFilled,
   IconTag,
   IconTrash,
 } from '@tabler/icons-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ApiClientError, docTypes, documents } from '../../api/client'
+import { ApiClientError, docTypes, documents, folders } from '../../api/client'
+import { buildFolderPathMap } from '../../lib/tree-utils'
 import EditMetadataModal from './EditMetadataModal'
 import FolderMembershipEditor from './FolderMembershipEditor'
 import NotesSection from '../common/NotesSection'
@@ -266,8 +266,29 @@ function MetadataSection({ doc }: { doc: DocumentResponse }) {
 
 // ── Folders (membership) ───────────────────────────────────────────────────────
 
-function FoldersSection({ doc, onEdit }: { doc: DocumentResponse; onEdit: () => void }) {
-  const primaryPath = doc.primary_folder_path ?? []
+function FoldersSection({
+  doc,
+  onEdit,
+  onFolderNavigate,
+}: {
+  doc: DocumentResponse
+  onEdit: () => void
+  onFolderNavigate?: (folderId: string, folderName: string) => void
+}) {
+  // Resolve the primary folder's full path (root → leaf) client-side from the flat
+  // folder list — the document endpoint does not populate `primary_folder_path`.
+  const { data: allFolders } = useQuery({
+    queryKey: ['folders', 'flat'],
+    queryFn: () => folders.flat(),
+    staleTime: 60_000,
+  })
+  const pathMap = useMemo(() => buildFolderPathMap(allFolders ?? []), [allFolders])
+
+  const primaryFolder = doc.folders.find((f) => f.is_primary) ?? null
+  const primaryPath = primaryFolder
+    ? (pathMap.get(primaryFolder.folder_id) ?? primaryFolder.name)
+    : null
+
   return (
     <Stack gap="xs">
       <Group justify="space-between">
@@ -287,40 +308,30 @@ function FoldersSection({ doc, onEdit }: { doc: DocumentResponse; onEdit: () => 
         </Button>
       </Group>
 
-      {primaryPath.length > 0 && (
-        <Group gap={2} wrap="wrap">
-          {primaryPath.map((segment, idx, arr) => (
-            <span key={idx}>
-              <Text size="xs" span c={idx === arr.length - 1 ? undefined : 'dimmed'}>
-                {segment}
-              </Text>
-              {idx < arr.length - 1 && (
-                <Text size="xs" span c="dimmed">
-                  {' / '}
-                </Text>
-              )}
-            </span>
-          ))}
-        </Group>
+      {primaryFolder && primaryPath && (
+        <Tooltip label="Show all documents in this folder" openDelay={500}>
+          <Anchor
+            component="button"
+            type="button"
+            onClick={() => onFolderNavigate?.(primaryFolder.folder_id, primaryFolder.name)}
+            underline="hover"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'flex-start',
+              gap: 4,
+              minWidth: 0,
+              textAlign: 'left',
+            }}
+          >
+            <IconFolder size={12} style={{ flexShrink: 0, marginTop: 2 }} />
+            <Text size="xs" span>
+              {primaryPath}
+            </Text>
+          </Anchor>
+        </Tooltip>
       )}
 
-      {doc.folders.length > 0 ? (
-        <Group gap={6} wrap="wrap">
-          {doc.folders.map((f) => (
-            <Badge
-              key={f.folder_id}
-              size="sm"
-              variant={f.is_primary ? 'filled' : 'light'}
-              color={f.is_primary ? 'blue' : 'gray'}
-              leftSection={
-                f.is_primary ? <IconStarFilled size={10} /> : <IconFolder size={10} />
-              }
-            >
-              {f.emoji ? `${f.emoji} ` : ''}{f.name}
-            </Badge>
-          ))}
-        </Group>
-      ) : (
+      {doc.folders.length === 0 && (
         <Text size="xs" c="dimmed" fs="italic">
           Not assigned to any folder.
         </Text>
@@ -429,11 +440,14 @@ function EmptyState() {
 interface DocumentDetailPanelProps {
   documentId: string | null
   onDocumentDeleted?: () => void
+  /** Open the document list filtered to the given folder (keeps the doc selected). */
+  onFolderNavigate?: (folderId: string, folderName: string) => void
 }
 
 export default function DocumentDetailPanel({
   documentId,
   onDocumentDeleted,
+  onFolderNavigate,
 }: DocumentDetailPanelProps) {
   const isMobile = useMediaQuery('(max-width: 48em)')
   const [mobileTab, setMobileTab] = useState('info')
@@ -797,7 +811,7 @@ export default function DocumentDetailPanel({
                   </>
                 )}
                 <Divider />
-                <FoldersSection doc={doc} onEdit={openFolders} />
+                <FoldersSection doc={doc} onEdit={openFolders} onFolderNavigate={onFolderNavigate} />
                 {doc.extracted_values.length > 0 && (
                   <>
                     <Divider />
@@ -932,7 +946,7 @@ export default function DocumentDetailPanel({
 
               {/* Folders (membership) */}
               <Divider />
-              <FoldersSection doc={doc} onEdit={openFolders} />
+              <FoldersSection doc={doc} onEdit={openFolders} onFolderNavigate={onFolderNavigate} />
 
               {/* Extracted values */}
               <Divider />

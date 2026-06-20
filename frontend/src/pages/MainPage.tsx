@@ -75,6 +75,18 @@ export default function MainPage() {
     setActiveDocumentId(null)
   }
 
+  // Navigate to a folder from the detail panel: show that folder's documents while
+  // keeping the current document selected (it stays highlighted in the list).
+  const handleFolderNavigateFromDetail = (folderId: string, folderName: string) => {
+    handleSearchClear()
+    setActiveFolderId(folderId)
+    setActiveFolderName(folderName)
+    if (isMobile) {
+      closeMobileDetail()
+      setMobileTab('documents')
+    }
+  }
+
   const handleMobileTabChange = (tab: MobileTab) => {
     setMobileTab(tab)
     if (tab === 'documents') {
@@ -144,6 +156,7 @@ export default function MainPage() {
           onClose={closeMobileDetail}
           documentId={activeDocumentId}
           onDocumentDeleted={handleDocumentDeleted}
+          onFolderNavigate={handleFolderNavigateFromDetail}
         />
       )}
 
@@ -174,6 +187,7 @@ export default function MainPage() {
             <DocumentDetailPanel
               documentId={activeDocumentId}
               onDocumentDeleted={handleDocumentDeleted}
+              onFolderNavigate={handleFolderNavigateFromDetail}
             />
           )
         }
