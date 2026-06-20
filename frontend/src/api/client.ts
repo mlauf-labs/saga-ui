@@ -6,6 +6,7 @@
 import { dispatchUnauthorized } from '../lib/auth-events'
 import type {
   AgendaQueryParams,
+  AgentsStatsResponse,
   DeleteFolderStrategy,
   DocType,
   DocTypeCreate,
@@ -30,6 +31,7 @@ import type {
   NoteUpdate,
   SearchRequest,
   SearchResponse,
+  StatsResponse,
   TimelineQueryParams,
   TimelineResponse,
   UploadAcceptedResponse,
@@ -351,6 +353,13 @@ export const llm = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+}
+
+// ── Statistics ─────────────────────────────────────────────────────────────
+
+export const stats = {
+  get: () => request<StatsResponse>('/api/stats'),
+  agents: () => request<AgentsStatsResponse>('/api/agents-stats'),
 }
 
 export { ApiClientError }
