@@ -7,11 +7,17 @@ from httpx import AsyncClient, Response
 
 
 def _make_session_cookie() -> str:
-    """Build a valid signed session cookie directly (bypasses the rate-limited login endpoint)."""
+    """Build a valid signed session cookie directly (bypasses the rate-limited login endpoint).
+
+    Sign with the app's configured session secret rather than a hard-coded value, so the
+    cookie validates regardless of what SESSION_SECRET the environment provides (CI sets a
+    different value than the conftest default).
+    """
     from itsdangerous import URLSafeTimedSerializer
 
-    secret = "test-session-secret-minimum-32-chars-long!!"
-    s = URLSafeTimedSerializer(secret)
+    from app.config import get_settings
+
+    s = URLSafeTimedSerializer(get_settings().session_secret)
     return s.dumps({"u": "admin"})
 
 
