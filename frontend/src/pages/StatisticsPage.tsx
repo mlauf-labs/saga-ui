@@ -20,7 +20,11 @@ export default function StatisticsPage() {
   const statsQuery = useQuery({ queryKey: ['stats'], queryFn: stats.get })
   const agentsQuery = useQuery({ queryKey: ['agents-stats'], queryFn: stats.agents, retry: false })
 
-  if (statsQuery.isLoading) return <Loader m="xl" />
+  if (statsQuery.isLoading) return (
+    <AdminLayout>
+      <Loader m="xl" />
+    </AdminLayout>
+  )
   if (statsQuery.isError || !statsQuery.data)
     return (
       <AdminLayout>
